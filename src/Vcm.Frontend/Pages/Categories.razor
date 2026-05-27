@@ -1,0 +1,141 @@
+@page "/categories"
+@inject IApiClientService ApiClient
+@using Vcm.Frontend.Models
+@using Vcm.Frontend.Services
+
+<PageTitle>Kategorier</PageTitle>
+
+<h1>Kategorier</h1>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<div class="mb-3">
+    <label class="form-label">Namn</label>
+    <InputText class="form-control" @bind-Value="newCategory.Name" />
+</div>
+<button class="btn btn-primary mb-4" @onclick="CreateCategoryAsync">Skapa kategori</button>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Namn</th>
+        <th>Åtgärder</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var category in categories)
+    {
+        <tr>
+            <td>@category.Id</td>
+            <td>
+                @if (editId == category.Id)
+                {
+                    <InputText class="form-control" @bind-Value="editName" />
+                }
+                else
+                {
+                    @category.Name
+                }
+            </td>
+            <td>
+                @if (editId == category.Id)
+                {
+                    <button class="btn btn-success btn-sm me-2" @onclick="() => UpdateCategoryAsync(category.Id)">Spara</button>
+                    <button class="btn btn-secondary btn-sm" @onclick="CancelEdit">Avbryt</button>
+                }
+                else
+                {
+                    <button class="btn btn-warning btn-sm me-2" @onclick="() => StartEdit(category)">Redigera</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => DeleteCategoryAsync(category.Id)">Ta bort</button>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    private List<CategoryResponseDto> categories = [];
+    private CategoryRequestDto newCategory = new();
+    private string? errorMessage;
+    private int? editId;
+    private string editName = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategoriesAsync();
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        try
+        {
+            errorMessage = null;
+            categories = await ApiClient.GetCategoriesAsync();
+        }
+        catch
+        {
+            errorMessage = "Kunde inte hämta kategorier från API:t.";
+        }
+    }
+
+    private async Task CreateCategoryAsync()
+    {
+        try
+        {
+            errorMessage = null;
+            await ApiClient.CreateCategoryAsync(newCategory);
+            newCategory = new CategoryRequestDto();
+            await LoadCategoriesAsync();
+        }
+        catch
+        {
+            errorMessage = "Kunde inte skapa kategori.";
+        }
+    }
+
+    private void StartEdit(CategoryResponseDto category)
+    {
+        editId = category.Id;
+        editName = category.Name;
+    }
+
+    private void CancelEdit()
+    {
+        editId = null;
+        editName = string.Empty;
+    }
+
+    private async Task UpdateCategoryAsync(int id)
+    {
+        try
+        {
+            errorMessage = null;
+            await ApiClient.UpdateCategoryAsync(id, new CategoryRequestDto { Name = editName });
+            CancelEdit();
+            await LoadCategoriesAsync();
+        }
+        catch
+        {
+            errorMessage = "Kunde inte uppdatera kategori.";
+        }
+    }
+
+    private async Task DeleteCategoryAsync(int id)
+    {
+        try
+        {
+            errorMessage = null;
+            await ApiClient.DeleteCategoryAsync(id);
+            await LoadCategoriesAsync();
+        }
+        catch
+        {
+            errorMessage = "Kunde inte ta bort kategori.";
+        }
+    }
+}

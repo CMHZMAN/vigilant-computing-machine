@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Vcm.Api/Vcm.Api.csproj" />
+    <Project Path="src/Vcm.Application/Vcm.Application.csproj" />
+    <Project Path="src/Vcm.Domain/Vcm.Domain.csproj" />
+    <Project Path="src/Vcm.Frontend/Vcm.Frontend.csproj" />
+    <Project Path="src/Vcm.Infrastructure/Vcm.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Vcm.Application.Tests/Vcm.Application.Tests.csproj" />
+  </Folder>
+</Solution>
