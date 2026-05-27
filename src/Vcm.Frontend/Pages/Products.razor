@@ -1,0 +1,192 @@
+@page "/products"
+@inject IApiClientService ApiClient
+@using Vcm.Frontend.Models
+@using Vcm.Frontend.Services
+
+<PageTitle>Produkter</PageTitle>
+
+<h1>Produkter</h1>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Namn</label>
+        <InputText class="form-control" @bind-Value="newProduct.Name" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Pris</label>
+        <InputNumber class="form-control" @bind-Value="newProduct.Price" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Kategori</label>
+        <InputSelect class="form-select" @bind-Value="newProduct.CategoryId">
+            <option value="0">Välj kategori</option>
+            @foreach (var category in categories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </InputSelect>
+    </div>
+</div>
+<button class="btn btn-primary mb-4" @onclick="CreateProductAsync">Skapa produkt</button>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Namn</th>
+        <th>Pris</th>
+        <th>Kategori</th>
+        <th>Åtgärder</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var product in products)
+    {
+        <tr>
+            <td>@product.Id</td>
+            <td>
+                @if (editId == product.Id)
+                {
+                    <InputText class="form-control" @bind-Value="editProduct.Name" />
+                }
+                else
+                {
+                    @product.Name
+                }
+            </td>
+            <td>
+                @if (editId == product.Id)
+                {
+                    <InputNumber class="form-control" @bind-Value="editProduct.Price" />
+                }
+                else
+                {
+                    @product.Price
+                }
+            </td>
+            <td>
+                @if (editId == product.Id)
+                {
+                    <InputSelect class="form-select" @bind-Value="editProduct.CategoryId">
+                        <option value="0">Välj kategori</option>
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </InputSelect>
+                }
+                else
+                {
+                    @product.CategoryName
+                }
+            </td>
+            <td>
+                @if (editId == product.Id)
+                {
+                    <button class="btn btn-success btn-sm me-2" @onclick="() => UpdateProductAsync(product.Id)">Spara</button>
+                    <button class="btn btn-secondary btn-sm" @onclick="CancelEdit">Avbryt</button>
+                }
+                else
+                {
+                    <button class="btn btn-warning btn-sm me-2" @onclick="() => StartEdit(product)">Redigera</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => DeleteProductAsync(product.Id)">Ta bort</button>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    private List<ProductResponseDto> products = [];
+    private List<CategoryResponseDto> categories = [];
+    private ProductRequestDto newProduct = new();
+    private ProductRequestDto editProduct = new();
+    private int? editId;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            errorMessage = null;
+            categories = await ApiClient.GetCategoriesAsync();
+            products = await ApiClient.GetProductsAsync();
+        }
+        catch
+        {
+            errorMessage = "Kunde inte hämta data från API:t.";
+        }
+    }
+
+    private async Task CreateProductAsync()
+    {
+        try
+        {
+            errorMessage = null;
+            await ApiClient.CreateProductAsync(newProduct);
+            newProduct = new ProductRequestDto();
+            await LoadDataAsync();
+        }
+        catch
+        {
+            errorMessage = "Kunde inte skapa produkt.";
+        }
+    }
+
+    private void StartEdit(ProductResponseDto product)
+    {
+        editId = product.Id;
+        editProduct = new ProductRequestDto
+        {
+            Name = product.Name,
+            Price = product.Price,
+            CategoryId = product.CategoryId
+        };
+    }
+
+    private void CancelEdit()
+    {
+        editId = null;
+        editProduct = new ProductRequestDto();
+    }
+
+    private async Task UpdateProductAsync(int id)
+    {
+        try
+        {
+            errorMessage = null;
+            await ApiClient.UpdateProductAsync(id, editProduct);
+            CancelEdit();
+            await LoadDataAsync();
+        }
+        catch
+        {
+            errorMessage = "Kunde inte uppdatera produkt.";
+        }
+    }
+
+    private async Task DeleteProductAsync(int id)
+    {
+        try
+        {
+            errorMessage = null;
+            await ApiClient.DeleteProductAsync(id);
+            await LoadDataAsync();
+        }
+        catch
+        {
+            errorMessage = "Kunde inte ta bort produkt.";
+        }
+    }
+}
