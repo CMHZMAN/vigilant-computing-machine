@@ -57,9 +57,20 @@ public class ApiClientService(HttpClient httpClient) : IApiClientService
     {
         if (response.IsSuccessStatusCode) return;
         var body = await response.Content.ReadAsStringAsync();
-        throw new HttpRequestException(
-            string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body,
-            inner: null,
-            statusCode: response.StatusCode);
+        var message = TryExtractMessage(body) ?? response.ReasonPhrase ?? "An unexpected error occurred.";
+        throw new HttpRequestException(message, inner: null, statusCode: response.StatusCode);
+    }
+
+    private static string? TryExtractMessage(string body)
+    {
+        if (string.IsNullOrWhiteSpace(body)) return null;
+        try
+        {
+            var doc = System.Text.Json.JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("message", out var prop))
+                return prop.GetString();
+        }
+        catch (System.Text.Json.JsonException) { }
+        return body;
     }
 }
