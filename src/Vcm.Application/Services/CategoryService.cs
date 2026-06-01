@@ -1,3 +1,4 @@
+using Vcm.Application.DTOs;
 using Vcm.Application.DTOs.Categories;
 using Vcm.Application.Interfaces.Repositories;
 using Vcm.Application.Interfaces.Services;
@@ -19,9 +20,24 @@ public class CategoryService(ICategoryRepository categoryRepository) : ICategory
         return category is null ? null : MapToResponse(category);
     }
 
+    public async Task<PaginatedResult<CategoryResponseDto>> GetPagedAsync(int page, int pageSize)
+    {
+        var (items, totalCount) = await categoryRepository.GetPagedAsync(page, pageSize);
+        return new PaginatedResult<CategoryResponseDto>
+        {
+            Items = items.Select(MapToResponse),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
     public async Task<CategoryResponseDto> CreateAsync(CategoryRequestDto request)
     {
         Validate(request);
+
+        if (await categoryRepository.ExistsByNameAsync(request.Name.Trim()))
+            throw new ArgumentException($"A category named '{request.Name.Trim()}' already exists.");
 
         var category = new Category
         {
@@ -38,9 +54,10 @@ public class CategoryService(ICategoryRepository categoryRepository) : ICategory
 
         var existing = await categoryRepository.GetByIdAsync(id);
         if (existing is null)
-        {
             return false;
-        }
+
+        if (await categoryRepository.ExistsByNameAsync(request.Name.Trim(), excludeId: id))
+            throw new ArgumentException($"A category named '{request.Name.Trim()}' already exists.");
 
         existing.Name = request.Name.Trim();
         await categoryRepository.UpdateAsync(existing);
@@ -51,9 +68,10 @@ public class CategoryService(ICategoryRepository categoryRepository) : ICategory
     {
         var existing = await categoryRepository.GetByIdAsync(id);
         if (existing is null)
-        {
             return false;
-        }
+
+        if (await categoryRepository.HasProductsAsync(id))
+            throw new InvalidOperationException("Cannot delete a category that has associated products.");
 
         await categoryRepository.DeleteAsync(existing);
         return true;

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Vcm.Application.DTOs;
 using Vcm.Application.DTOs.Categories;
 using Vcm.Application.Interfaces.Services;
 
@@ -13,6 +14,14 @@ public class CategoriesController(ICategoryService categoryService) : Controller
     {
         var categories = await categoryService.GetAllAsync();
         return Ok(categories);
+    }
+
+    [HttpGet("paged")]
+    public async Task<ActionResult<PaginatedResult<CategoryResponseDto>>> GetPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        if (page < 1 || pageSize < 1)
+            return BadRequest(new { message = "Page and pageSize must be greater than zero." });
+        return Ok(await categoryService.GetPagedAsync(page, pageSize));
     }
 
     [HttpGet("{id:int}")]
@@ -53,7 +62,14 @@ public class CategoriesController(ICategoryService categoryService) : Controller
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var deleted = await categoryService.DeleteAsync(id);
-        return deleted ? NoContent() : NotFound();
+        try
+        {
+            var deleted = await categoryService.DeleteAsync(id);
+            return deleted ? NoContent() : NotFound();
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new { message = exception.Message });
+        }
     }
 }

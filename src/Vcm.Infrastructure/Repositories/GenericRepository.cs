@@ -11,6 +11,16 @@ public class GenericRepository<T>(AppDbContext dbContext) : IGenericRepository<T
 
     public virtual async Task<IEnumerable<T>> GetAllAsync() => await DbSet.AsNoTracking().ToListAsync();
 
+    public virtual async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(int page, int pageSize)
+    {
+        var totalCount = await DbSet.CountAsync();
+        var items = await DbSet.AsNoTracking()
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return (items, totalCount);
+    }
+
     public virtual async Task<T?> GetByIdAsync(int id) => await DbSet.FindAsync(id);
 
     public virtual async Task<T> AddAsync(T entity)

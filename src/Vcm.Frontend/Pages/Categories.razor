@@ -77,9 +77,9 @@
             errorMessage = null;
             categories = await ApiClient.GetCategoriesAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            errorMessage = "Kunde inte hämta kategorier från API:t.";
+            errorMessage = ex.Message;
         }
     }
 
@@ -92,9 +92,9 @@
             newCategory = new CategoryRequestDto();
             await LoadCategoriesAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            errorMessage = "Kunde inte skapa kategori.";
+            errorMessage = ex.Message;
         }
     }
 
@@ -119,9 +119,9 @@
             CancelEdit();
             await LoadCategoriesAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            errorMessage = "Kunde inte uppdatera kategori.";
+            errorMessage = ex.Message;
         }
     }
 
@@ -133,9 +133,9 @@
             await ApiClient.DeleteCategoryAsync(id);
             await LoadCategoriesAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            errorMessage = "Kunde inte ta bort kategori.";
+            errorMessage = ex.Message;
         }
     }
 }

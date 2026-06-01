@@ -1,3 +1,4 @@
+using Vcm.Application.DTOs;
 using Vcm.Application.DTOs.Products;
 using Vcm.Application.Interfaces.Repositories;
 using Vcm.Application.Interfaces.Services;
@@ -19,6 +20,18 @@ public class ProductService(IProductRepository productRepository, ICategoryRepos
         return product is null ? null : MapToResponse(product);
     }
 
+    public async Task<PaginatedResult<ProductResponseDto>> GetPagedAsync(int page, int pageSize)
+    {
+        var (items, totalCount) = await productRepository.GetPagedWithCategoryAsync(page, pageSize);
+        return new PaginatedResult<ProductResponseDto>
+        {
+            Items = items.Select(MapToResponse),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
     public async Task<ProductResponseDto> CreateAsync(ProductRequestDto request)
     {
         await ValidateAsync(request);
@@ -38,7 +51,7 @@ public class ProductService(IProductRepository productRepository, ICategoryRepos
 
     public async Task<bool> UpdateAsync(int id, ProductRequestDto request)
     {
-        await ValidateAsync(request);
+        await ValidateAsync(request, excludeId: id);
 
         var existing = await productRepository.GetByIdAsync(id);
         if (existing is null)
@@ -75,22 +88,18 @@ public class ProductService(IProductRepository productRepository, ICategoryRepos
         CategoryName = product.Category?.Name ?? string.Empty
     };
 
-    private async Task ValidateAsync(ProductRequestDto request)
+    private async Task ValidateAsync(ProductRequestDto request, int? excludeId = null)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
-        {
             throw new ArgumentException("Product name is required.");
-        }
 
-        if (request.Price < 0)
-        {
-            throw new ArgumentException("Product price cannot be negative.");
-        }
+        if (request.Price <= 0)
+            throw new ArgumentException("Product price must be greater than zero.");
 
-        var categoryExists = await categoryRepository.ExistsAsync(request.CategoryId);
-        if (!categoryExists)
-        {
+        if (await productRepository.ExistsByNameAsync(request.Name.Trim(), excludeId))
+            throw new ArgumentException($"A product named '{request.Name.Trim()}' already exists.");
+
+        if (!await categoryRepository.ExistsAsync(request.CategoryId))
             throw new ArgumentException("Category does not exist.");
-        }
     }
 }

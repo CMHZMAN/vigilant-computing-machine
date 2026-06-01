@@ -123,9 +123,9 @@
             categories = await ApiClient.GetCategoriesAsync();
             products = await ApiClient.GetProductsAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            errorMessage = "Kunde inte hämta data från API:t.";
+            errorMessage = ex.Message;
         }
     }
 
@@ -138,9 +138,9 @@
             newProduct = new ProductRequestDto();
             await LoadDataAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            errorMessage = "Kunde inte skapa produkt.";
+            errorMessage = ex.Message;
         }
     }
 
@@ -170,9 +170,9 @@
             CancelEdit();
             await LoadDataAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            errorMessage = "Kunde inte uppdatera produkt.";
+            errorMessage = ex.Message;
         }
     }
 
@@ -184,9 +184,9 @@
             await ApiClient.DeleteProductAsync(id);
             await LoadDataAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            errorMessage = "Kunde inte ta bort produkt.";
+            errorMessage = ex.Message;
         }
     }
 }

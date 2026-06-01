@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Vcm.Application.DTOs;
 using Vcm.Application.DTOs.Products;
 using Vcm.Application.Interfaces.Services;
 
@@ -13,6 +14,14 @@ public class ProductsController(IProductService productService) : ControllerBase
     {
         var products = await productService.GetAllAsync();
         return Ok(products);
+    }
+
+    [HttpGet("paged")]
+    public async Task<ActionResult<PaginatedResult<ProductResponseDto>>> GetPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        if (page < 1 || pageSize < 1)
+            return BadRequest(new { message = "Page and pageSize must be greater than zero." });
+        return Ok(await productService.GetPagedAsync(page, pageSize));
     }
 
     [HttpGet("{id:int}")]

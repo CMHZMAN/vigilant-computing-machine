@@ -11,6 +11,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>()
+            .Property(c => c.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        modelBuilder.Entity<Product>()
+            .Property(p => p.Name)
+            .HasMaxLength(200)
+            .IsRequired();
+
+        modelBuilder.Entity<Product>()
+            .Property(p => p.Price)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Category>()
             .HasMany(c => c.Products)
             .WithOne(p => p.Category)
             .HasForeignKey(p => p.CategoryId)
