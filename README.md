@@ -9,7 +9,10 @@ Full stack-lösning med:
   - `src/Vcm.Application`
   - `src/Vcm.Infrastructure`
   - `src/Vcm.Api`
-- `tests/Vcm.Application.Tests` (xUnit + NSubstitute, 8 enhetstester: 5 i `ProductServiceTests`, 3 i `CategoryServiceTests`, namngivna enligt `Method_WhenCondition_ExpectedResult` med Arrange/Act/Assert-kommentarer)
+- `tests/Vcm.Application.Tests` (xUnit + NSubstitute, 8 enhetstester)
+  - 5 i `ProductServiceTests`
+  - 3 i `CategoryServiceTests`
+  - Namngivna enligt `Method_WhenCondition_ExpectedResult` med Arrange/Act/Assert-kommentarer
 
 ## Körning lokalt
 
